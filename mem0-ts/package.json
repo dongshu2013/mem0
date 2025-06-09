@@ -1,5 +1,5 @@
 {
-  "name": "mem0ai",
+  "name": "@mysta/mem0ai",
   "version": "2.1.31",
   "description": "The Memory Layer For Your AI Apps",
   "main": "./dist/index.js",
@@ -77,7 +77,7 @@
     "deepinfra",
     "openrouter"
   ],
-  "author": "Deshraj Yadav",
+  "author": "Mysta AI",
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^22.7.6",
@@ -122,7 +122,8 @@
     "node": ">=18"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b"
 }
