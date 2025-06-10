@@ -29,7 +29,7 @@ export class DeepInfraLLM implements LLM {
   async generateResponse(
     messages: Message[],
     responseFormat?: { type: string },
-    tools?: any[],
+    tools?: any[]
   ): Promise<string | LLMResponse> {
     const response = await fetch(
       `${this.config.baseUrl || "https://api.deepinfra.com/v1"}/chat/completions`,
@@ -51,7 +51,7 @@ export class DeepInfraLLM implements LLM {
           response_format: responseFormat,
           ...(tools && { tools, tool_choice: "auto" }),
         }),
-      },
+      }
     );
 
     if (!response.ok) {
@@ -77,7 +77,7 @@ export class DeepInfraLLM implements LLM {
 
   async generateChat(messages: Message[]): Promise<LLMResponse> {
     const response = await fetch(
-      `${this.config.baseURL || "https://api.deepinfra.com/v1"}/chat/completions`,
+      `${this.config.baseUrl || "https://api.deepinfra.com/v1"}/chat/completions`,
       {
         method: "POST",
         headers: {
@@ -94,7 +94,7 @@ export class DeepInfraLLM implements LLM {
                 : JSON.stringify(msg.content),
           })),
         }),
-      },
+      }
     );
 
     if (!response.ok) {
