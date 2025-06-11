@@ -30,32 +30,30 @@ export class OpenRouterLLM implements LLM {
     responseFormat?: { type: string },
     tools?: any[],
   ): Promise<string | LLMResponse> {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.config.apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": this.config.baseUrl || "https://mem0.ai",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: messages.map((msg) => {
-            const role = msg.role as "system" | "user" | "assistant";
-            return {
-              role,
-              content:
-                typeof msg.content === "string"
-                  ? msg.content
-                  : JSON.stringify(msg.content),
-            };
-          }),
-          response_format: responseFormat as { type: "text" | "json_object" },
-          ...(tools && { tools, tool_choice: "auto" }),
-        }),
+    const response = await fetch(`${this.config.baseURL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://my-staging.mysta.ai",
+        "X-Title": "Mysta AI",
       },
-    );
+      body: JSON.stringify({
+        model: this.model,
+        messages: messages.map((msg) => {
+          const role = msg.role as "system" | "user" | "assistant";
+          return {
+            role,
+            content:
+              typeof msg.content === "string"
+                ? msg.content
+                : JSON.stringify(msg.content),
+          };
+        }),
+        response_format: responseFormat as { type: "text" | "json_object" },
+        ...(tools && { tools, tool_choice: "auto" }),
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`OpenRouter API error: ${response.statusText}`);
@@ -79,30 +77,28 @@ export class OpenRouterLLM implements LLM {
   }
 
   async generateChat(messages: Message[]): Promise<LLMResponse> {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.config.apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": this.config.baseUrl || "https://mem0.ai",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: messages.map((msg) => {
-            const role = msg.role as "system" | "user" | "assistant";
-            return {
-              role,
-              content:
-                typeof msg.content === "string"
-                  ? msg.content
-                  : JSON.stringify(msg.content),
-            };
-          }),
-        }),
+    const response = await fetch(`${this.config.baseURL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://my-staging.mysta.ai",
+        "X-Title": "Mysta AI",
       },
-    );
+      body: JSON.stringify({
+        model: this.model,
+        messages: messages.map((msg) => {
+          const role = msg.role as "system" | "user" | "assistant";
+          return {
+            role,
+            content:
+              typeof msg.content === "string"
+                ? msg.content
+                : JSON.stringify(msg.content),
+          };
+        }),
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`OpenRouter API error: ${response.statusText}`);

@@ -12,7 +12,7 @@ export class DeepInfraEmbedder implements Embedder {
 
   async embed(text: string): Promise<number[]> {
     const response = await fetch(
-      `${this.config.url || "https://api.deepinfra.com/v1"}/embeddings`,
+      `${this.config.url || "https://api.deepinfra.com/v1/openai"}/embeddings`,
       {
         method: "POST",
         headers: {
@@ -36,7 +36,7 @@ export class DeepInfraEmbedder implements Embedder {
 
   async embedBatch(texts: string[]): Promise<number[][]> {
     const response = await fetch(
-      `${this.config.url || "https://api.deepinfra.com/v1"}/embeddings`,
+      `${this.config.url || "https://api.deepinfra.com/v1/openai"}/embeddings`,
       {
         method: "POST",
         headers: {

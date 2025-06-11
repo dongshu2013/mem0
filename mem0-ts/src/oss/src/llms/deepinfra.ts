@@ -31,31 +31,45 @@ export class DeepInfraLLM implements LLM {
     responseFormat?: { type: string },
     tools?: any[],
   ): Promise<string | LLMResponse> {
-    const response = await fetch(
-      `${this.config.baseUrl || "https://api.deepinfra.com/v1"}/chat/completions`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.config.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: messages.map((msg) => ({
-            role: msg.role,
-            content:
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content),
-          })),
-          response_format: responseFormat,
-          ...(tools && { tools, tool_choice: "auto" }),
-        }),
+    const url = `${this.config.baseURL || "https://api.deepinfra.com/v1"}/chat/completions`;
+    console.log("DeepInfra API Request:", {
+      url,
+      model: this.model,
+      messages,
+      responseFormat,
+      tools,
+    });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        model: this.model,
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content:
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content),
+        })),
+        response_format: responseFormat,
+        ...(tools && { tools, tool_choice: "auto" }),
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`DeepInfra API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("DeepInfra API Error:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        url,
+        model: this.model,
+      });
+      throw new Error(`DeepInfra API error: ${errorText}`);
     }
 
     const data = (await response.json()) as DeepInfraResponse;
@@ -76,29 +90,41 @@ export class DeepInfraLLM implements LLM {
   }
 
   async generateChat(messages: Message[]): Promise<LLMResponse> {
-    const response = await fetch(
-      `${this.config.baseUrl || "https://api.deepinfra.com/v1"}/chat/completions`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.config.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: messages.map((msg) => ({
-            role: msg.role,
-            content:
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content),
-          })),
-        }),
+    const url = `${this.config.baseURL || "https://api.deepinfra.com/v1"}/chat/completions`;
+    console.log("DeepInfra API Request:", {
+      url,
+      model: this.model,
+      messages,
+    });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        model: this.model,
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content:
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content),
+        })),
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`DeepInfra API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("DeepInfra API Error:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        url,
+        model: this.model,
+      });
+      throw new Error(`DeepInfra API error: ${errorText}`);
     }
 
     const data = (await response.json()) as DeepInfraResponse;

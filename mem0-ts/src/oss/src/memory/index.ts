@@ -241,14 +241,14 @@ export class Memory {
     }
     const parsedMessages = messages.map((m) => m.content).join("\n");
 
-    const [systemPrompt, userPrompt] = this.customPrompt
+    const [factSystemPrompt, factUserPrompt] = this.customPrompt
       ? [this.customPrompt, `Input:\n${parsedMessages}`]
       : getFactRetrievalMessages(parsedMessages);
 
     const response = await this.llm.generateResponse(
       [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: "system", content: factSystemPrompt },
+        { role: "user", content: factUserPrompt },
       ],
       { type: "json_object" },
     );
@@ -256,7 +256,19 @@ export class Memory {
     const cleanResponse = removeCodeBlocks(response as string);
     let facts: string[] = [];
     try {
-      facts = JSON.parse(cleanResponse).facts || [];
+      const parsed = JSON.parse(cleanResponse);
+      if (!parsed.facts || !Array.isArray(parsed.facts)) {
+        console.warn("Invalid facts format in response:", parsed);
+        // 尝试修复响应格式
+        if (typeof parsed === "object") {
+          // 如果响应是对象但没有 facts 字段，尝试将整个对象作为单个事实
+          facts = [JSON.stringify(parsed)];
+        } else {
+          facts = [];
+        }
+      } else {
+        facts = parsed.facts;
+      }
     } catch (e) {
       console.error(
         "Failed to parse facts from LLM response:",
@@ -299,14 +311,19 @@ export class Memory {
     });
 
     // Get memory update decisions
-    const updatePrompt = getUpdateMemoryMessages(uniqueOldMemories, facts);
-
-    const updateResponse = await this.llm.generateResponse(
-      [{ role: "user", content: updatePrompt }],
+    const [updateSystemPrompt, updateUserPrompt] = getUpdateMemoryMessages(
+      uniqueOldMemories,
+      facts,
+    );
+    const updateRes = await this.llm.generateResponse(
+      [
+        { role: "system", content: updateSystemPrompt },
+        { role: "user", content: updateUserPrompt },
+      ],
       { type: "json_object" },
     );
 
-    const cleanUpdateResponse = removeCodeBlocks(updateResponse as string);
+    const cleanUpdateResponse = removeCodeBlocks(updateRes as string);
     let memoryActions: any[] = [];
     try {
       memoryActions = JSON.parse(cleanUpdateResponse).memory || [];
