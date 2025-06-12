@@ -1,6 +1,6 @@
 {
   "name": "@mysta.ai/mem0",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "The Memory Layer For Your AI Apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
