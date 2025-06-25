@@ -39,7 +39,7 @@ create extension if not exists vector;
 -- Create the memories table
 create table if not exists memories (
   id text primary key,
-  embedding vector(1536),
+  embedding vector(1024),
   metadata jsonb,
   created_at timestamp with time zone default timezone('utc', now()),
   updated_at timestamp with time zone default timezone('utc', now())
@@ -53,7 +53,7 @@ create table if not exists memory_migrations (
 
 -- Create the vector similarity search function
 create or replace function match_vectors(
-  query_embedding vector(1536),
+  query_embedding vector(1024),
   match_count int,
   filter jsonb default '{}'::jsonb
 )
@@ -102,7 +102,7 @@ export class SupabaseDB implements VectorStore {
   async initialize(): Promise<void> {
     try {
       // Verify table exists and vector operations work by attempting a test insert
-      const testVector = Array(1536).fill(0);
+      const testVector = Array(1024).fill(0);
 
       // First try to delete any existing test vector
       try {
@@ -138,7 +138,7 @@ create extension if not exists vector;
 -- Create the memories table
 create table if not exists memories (
   id text primary key,
-  embedding vector(1536),
+  embedding vector(1024),
   metadata jsonb,
   created_at timestamp with time zone default timezone('utc', now()),
   updated_at timestamp with time zone default timezone('utc', now())
@@ -152,7 +152,7 @@ create table if not exists memory_migrations (
 
 -- Create the vector similarity search function
 create or replace function match_vectors(
-  query_embedding vector(1536),
+  query_embedding vector(1024),
   match_count int,
   filter jsonb default '{}'::jsonb
 )

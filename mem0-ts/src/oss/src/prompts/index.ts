@@ -268,59 +268,5 @@ export function parseMessages(messages: string[]): string {
 }
 
 export function removeCodeBlocks(text: string): string {
-  // try {
-  //   try {
-  //     const parsed = JSON.parse(text);
-  //     // 如果解析成功但没有 facts 字段，添加一个空数组
-  //     if (!parsed.facts) {
-  //       parsed.facts = [];
-  //     }
-  //     // 验证是否符合 FactRetrievalSchema
-  //     const validated = FactRetrievalSchema.parse(parsed);
-  //     return JSON.stringify(validated);
-  //   } catch (e) {
-  //     // 如果直接解析失败，尝试提取 JSON 部分
-  //     const firstBrace = text.indexOf("{");
-  //     const lastBrace = text.lastIndexOf("}");
-
-  //     if (firstBrace === -1 || lastBrace === -1) {
-  //       console.warn("No JSON braces found in response:", text);
-  //       return JSON.stringify({ facts: [] });
-  //     }
-
-  //     const jsonPart = text.slice(firstBrace, lastBrace + 1);
-  //     try {
-  //       const parsed = JSON.parse(jsonPart);
-  //       // 如果解析成功但没有 facts 字段，添加一个空数组
-  //       if (!parsed.facts) {
-  //         parsed.facts = [];
-  //       }
-  //       // 验证是否符合 FactRetrievalSchema
-  //       const validated = FactRetrievalSchema.parse(parsed);
-  //       return JSON.stringify(validated);
-  //     } catch (e) {
-  //       console.error("Failed to parse or validate JSON:", e);
-  //       // 如果解析失败，尝试从文本中提取事实
-  //       const lines = text.split("\n").filter((line) => line.trim().length > 0);
-  //       const facts = lines
-  //         .map((line) => line.trim())
-  //         .filter(
-  //           (line) =>
-  //             !line.startsWith("{") &&
-  //             !line.startsWith("}") &&
-  //             !line.includes("```"),
-  //         )
-  //         .filter((line) => line.length > 0);
-
-  //       if (facts.length > 0) {
-  //         return JSON.stringify({ facts });
-  //       }
-  //       return JSON.stringify({ facts: [] });
-  //     }
-  //   }
-  // } catch (e) {
-  //   console.error("Error in removeCodeBlocks:", e);
-  //   return JSON.stringify({ facts: [] });
-  // }
   return text.replace(/```[^`]*```/g, "");
 }
