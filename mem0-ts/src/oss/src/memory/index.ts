@@ -56,15 +56,15 @@ export class Memory {
     this.customPrompt = this.config.customPrompt;
     this.embedder = EmbedderFactory.create(
       this.config.embedder.provider,
-      this.config.embedder.config
+      this.config.embedder.config,
     );
     this.vectorStore = VectorStoreFactory.create(
       this.config.vectorStore.provider,
-      this.config.vectorStore.config
+      this.config.vectorStore.config,
     );
     this.llm = LLMFactory.create(
       this.config.llm.provider,
-      this.config.llm.config
+      this.config.llm.config,
     );
     if (this.config.disableHistory) {
       this.db = new DummyHistoryManager();
@@ -80,7 +80,7 @@ export class Memory {
         this.config.historyStore && !this.config.disableHistory
           ? HistoryManagerFactory.create(
               this.config.historyStore.provider,
-              this.config.historyStore
+              this.config.historyStore,
             )
           : HistoryManagerFactory.create("sqlite", defaultConfig);
     }
@@ -154,7 +154,7 @@ export class Memory {
 
   async add(
     messages: string | Message[],
-    config: AddMemoryOptions
+    config: AddMemoryOptions,
   ): Promise<SearchResult> {
     await this._captureEvent("add", {
       message_count: Array.isArray(messages) ? messages.length : 1,
@@ -177,7 +177,7 @@ export class Memory {
 
     if (!filters.userId && !filters.agentId && !filters.runId) {
       throw new Error(
-        "One of the filters: userId, agentId or runId is required!"
+        "One of the filters: userId, agentId or runId is required!",
       );
     }
 
@@ -192,7 +192,7 @@ export class Memory {
       final_parsedMessages,
       metadata,
       filters,
-      infer
+      infer,
     );
 
     // Add to graph store if available
@@ -201,7 +201,7 @@ export class Memory {
       try {
         graphResult = await this.graphMemory.add(
           final_parsedMessages.map((m) => m.content).join("\n"),
-          filters
+          filters,
         );
       } catch (error) {
         console.error("Error adding to graph memory:", error);
@@ -218,7 +218,7 @@ export class Memory {
     messages: Message[],
     metadata: Record<string, any>,
     filters: SearchFilters,
-    infer: boolean
+    infer: boolean,
   ): Promise<MemoryItem[]> {
     if (!infer) {
       const returnedMemories: MemoryItem[] = [];
@@ -229,7 +229,7 @@ export class Memory {
         const memoryId = await this.createMemory(
           message.content as string,
           {},
-          metadata
+          metadata,
         );
         returnedMemories.push({
           id: memoryId,
@@ -250,7 +250,7 @@ export class Memory {
         { role: "system", content: factSystemPrompt },
         { role: "user", content: factUserPrompt },
       ],
-      { type: "json_object" }
+      { type: "json_object" },
     );
 
     const cleanResponse = removeCodeBlocks(response as string);
@@ -261,7 +261,7 @@ export class Memory {
       console.error(
         "Failed to parse facts from LLM response:",
         cleanResponse,
-        e
+        e,
       );
       facts = [];
     }
@@ -278,7 +278,7 @@ export class Memory {
       const existingMemories = await this.vectorStore.search(
         embedding,
         5,
-        filters
+        filters,
       );
       for (const mem of existingMemories) {
         retrievedOldMemory.push({ id: mem.id, text: mem.payload.data });
@@ -288,7 +288,7 @@ export class Memory {
     // Remove duplicates from old memories
     const uniqueOldMemories = retrievedOldMemory.filter(
       (mem, index) =>
-        retrievedOldMemory.findIndex((m) => m.id === mem.id) === index
+        retrievedOldMemory.findIndex((m) => m.id === mem.id) === index,
     );
 
     // Create UUID mapping for handling UUID hallucinations
@@ -301,7 +301,7 @@ export class Memory {
 
     const updateResponse = await this.llm.generateResponse(
       [{ role: "user", content: updatePrompt }],
-      { type: "json_object" }
+      { type: "json_object" },
     );
 
     // const cleanUpdateResponse = removeCodeBlocks(updateRes as string);
@@ -313,9 +313,29 @@ export class Memory {
       console.error(
         "Failed to parse memory actions from LLM response:",
         cleanUpdateResponse,
-        e
+        e,
       );
-      memoryActions = [];
+      // 尝试修复 JSON 响应
+      try {
+        // 移除可能的 markdown 代码块标记
+        let fixedResponse = cleanUpdateResponse
+          .replace(/```json\s*/g, "")
+          .replace(/```\s*$/g, "")
+          .trim();
+
+        // 尝试提取 JSON 部分
+        const jsonMatch = fixedResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          memoryActions = JSON.parse(jsonMatch[0]).memory || [];
+        } else {
+          memoryActions = [];
+        }
+      } catch (e2) {
+        console.error(
+          "Failed to fix memory actions JSON response, using empty array",
+        );
+        memoryActions = [];
+      }
     }
 
     // Process memory actions
@@ -327,7 +347,7 @@ export class Memory {
             const memoryId = await this.createMemory(
               action.text,
               newMessageEmbeddings,
-              metadata
+              metadata,
             );
             results.push({
               id: memoryId,
@@ -342,7 +362,7 @@ export class Memory {
               realMemoryId,
               action.text,
               newMessageEmbeddings,
-              metadata
+              metadata,
             );
             results.push({
               id: realMemoryId,
@@ -413,7 +433,7 @@ export class Memory {
 
   async search(
     query: string,
-    config: SearchMemoryOptions
+    config: SearchMemoryOptions,
   ): Promise<SearchResult> {
     await this._captureEvent("search", {
       query_length: query.length,
@@ -428,7 +448,7 @@ export class Memory {
 
     if (!filters.userId && !filters.agentId && !filters.runId) {
       throw new Error(
-        "One of the filters: userId, agentId or runId is required!"
+        "One of the filters: userId, agentId or runId is required!",
       );
     }
 
@@ -437,7 +457,7 @@ export class Memory {
     const memories = await this.vectorStore.search(
       queryEmbedding,
       limit,
-      filters
+      filters,
     );
 
     // Search graph store if available
@@ -494,7 +514,7 @@ export class Memory {
   }
 
   async deleteAll(
-    config: DeleteAllMemoryOptions
+    config: DeleteAllMemoryOptions,
   ): Promise<{ message: string }> {
     await this._captureEvent("delete_all", {
       has_user_id: !!config.userId,
@@ -510,7 +530,7 @@ export class Memory {
 
     if (!Object.keys(filters).length) {
       throw new Error(
-        "At least one filter is required to delete all memories. If you want to delete all memories, use the `reset()` method."
+        "At least one filter is required to delete all memories. If you want to delete all memories, use the `reset()` method.",
       );
     }
 
@@ -537,13 +557,13 @@ export class Memory {
       } catch (e) {
         console.error(
           `Failed to delete collection for provider '${this.config.vectorStore.provider}':`,
-          e
+          e,
         );
         // Decide if you want to re-throw or just log
       }
     } else {
       console.warn(
-        "Memory.reset(): Skipping vector store collection deletion as 'langchain' provider is used. Underlying Langchain vector store data is not cleared by this operation."
+        "Memory.reset(): Skipping vector store collection deletion as 'langchain' provider is used. Underlying Langchain vector store data is not cleared by this operation.",
       );
     }
 
@@ -554,16 +574,16 @@ export class Memory {
     // Re-initialize factories/clients based on the original config
     this.embedder = EmbedderFactory.create(
       this.config.embedder.provider,
-      this.config.embedder.config
+      this.config.embedder.config,
     );
     // Re-create vector store instance - crucial for Langchain to reset wrapper state if needed
     this.vectorStore = VectorStoreFactory.create(
       this.config.vectorStore.provider,
-      this.config.vectorStore.config // This will pass the original client instance back
+      this.config.vectorStore.config, // This will pass the original client instance back
     );
     this.llm = LLMFactory.create(
       this.config.llm.provider,
-      this.config.llm.config
+      this.config.llm.config,
     );
     // Re-init DB if needed (though db.reset() likely handles its state)
     // Re-init Graph if needed
@@ -617,7 +637,7 @@ export class Memory {
   private async createMemory(
     data: string,
     existingEmbeddings: Record<string, number[]>,
-    metadata: Record<string, any>
+    metadata: Record<string, any>,
   ): Promise<string> {
     const memoryId = uuidv4();
     const embedding =
@@ -636,7 +656,7 @@ export class Memory {
       null,
       data,
       "ADD",
-      memoryMetadata.createdAt
+      memoryMetadata.createdAt,
     );
 
     return memoryId;
@@ -646,7 +666,7 @@ export class Memory {
     memoryId: string,
     data: string,
     existingEmbeddings: Record<string, number[]>,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, any> = {},
   ): Promise<string> {
     const existingMemory = await this.vectorStore.get(memoryId);
     if (!existingMemory) {
@@ -681,7 +701,7 @@ export class Memory {
       data,
       "UPDATE",
       newMetadata.createdAt,
-      newMetadata.updatedAt
+      newMetadata.updatedAt,
     );
 
     return memoryId;
@@ -702,7 +722,7 @@ export class Memory {
       "DELETE",
       undefined,
       undefined,
-      1
+      1,
     );
 
     return memoryId;
