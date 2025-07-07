@@ -1,5 +1,6 @@
 import { LLM, LLMResponse } from "./base";
 import { LLMConfig, Message } from "../types";
+import { logger } from "../utils/logger";
 
 interface OpenRouterResponse {
   choices: Array<{
@@ -30,6 +31,21 @@ export class OpenRouterLLM implements LLM {
     responseFormat?: { type: string },
     tools?: any[],
   ): Promise<string | LLMResponse> {
+    const bodyData = {
+      model: this.model,
+      messages: messages.map((msg) => {
+        const role = msg.role as "system" | "user" | "assistant";
+        return {
+          role,
+          content:
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content),
+        };
+      }),
+      response_format: responseFormat as { type: "text" | "json_object" },
+      ...(tools && { tools, tool_choice: "auto" }),
+    };
     const response = await fetch(`${this.config.baseURL}/chat/completions`, {
       method: "POST",
       headers: {
@@ -38,28 +54,21 @@ export class OpenRouterLLM implements LLM {
         "HTTP-Referer": "https://my-staging.mysta.ai",
         "X-Title": "Mysta AI",
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages: messages.map((msg) => {
-          const role = msg.role as "system" | "user" | "assistant";
-          return {
-            role,
-            content:
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content),
-          };
-        }),
-        response_format: responseFormat as { type: "text" | "json_object" },
-        ...(tools && { tools, tool_choice: "auto" }),
-      }),
+      body: JSON.stringify(bodyData),
     });
+
+    logger.debug(`bodyData: ${JSON.stringify(bodyData)}`);
+    logger.debug(`baseURL: ${this.config.baseURL}`);
+    logger.debug(`model: ${this.model}`);
+    logger.debug(`responseFormat: ${JSON.stringify(responseFormat)}`);
+    logger.debug(`response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       throw new Error(`OpenRouter API error: ${response.statusText}`);
     }
 
     const data = (await response.json()) as OpenRouterResponse;
+    logger.debug(`response data: ${JSON.stringify(data)}`);
     const message = data.choices[0].message;
 
     if (message.tool_calls) {
